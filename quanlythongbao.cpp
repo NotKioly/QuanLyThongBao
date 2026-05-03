@@ -11,23 +11,26 @@ class Validator {
 public:
     static bool laEmail(string s) {
         size_t at = s.find('@');
-        size_t dot = s.find('.', at);
-        return (at != string::npos && at > 0 && dot != string::npos && dot > at + 1);
+        // Kiểm tra xem có dấu @ không, và nó không nằm ở đầu hay cuối chuỗi
+        if (at == string::npos || at == 0 || at == s.length() - 1) return false;
+        size_t dotAfterAt = s.find('.', at);
+        return (dotAfterAt != string::npos && dotAfterAt > at + 1 && dotAfterAt < s.length() - 1);
     }
 
     static bool laSDT(string s) {
-        // Kiểm tra độ dài và số 0 ở đầu
+        // 1. Kiểm tra độ dài và số 0 ở đầu
         if (s.length() != 10 || s[0] != '0') return false;
 
-        // Kiểm tra ký tự số
-        for (char c : s)
-            if (!isdigit(c)) return false;
+        // 2. Kiểm tra "Bẫy" chữ cái: Duyệt từng ký tự, nếu thấy không phải số thì loại ngay
+        for (char c : s) {
+            if (!isdigit(c)) return false; 
+        }
 
-        // Kiểm tra đầu số VN (3, 5, 7, 8, 9)
+        // 3. Kiểm tra đầu số VN (3, 5, 7, 8, 9)
         if (string("35789").find(s[1]) == string::npos)
             return false;
 
-        // Kiểm tra nếu toàn bộ số giống hệt nhau (ví dụ: 0333333333)
+        // 4. Kiểm tra nếu toàn bộ số giống hệt nhau (ví dụ: 0333333333)
         bool allSame = true;
         for (int i = 1; i < 10; i++) {
             if (s[i] != s[0]) {
@@ -41,7 +44,6 @@ public:
     }
 
     static bool laThoiGian(string s) {
-        // Định dạng dd/mm/yyyy
         if (s.length() != 10 || s[2] != '/' || s[5] != '/') return false;
 
         for (int i = 0; i < 10; i++) {
@@ -56,8 +58,6 @@ public:
         if (y < 1 || m < 1 || m > 12) return false;
 
         int ngayTrongThang[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-
-        // Kiểm tra năm nhuận
         if ((y % 400 == 0) || (y % 4 == 0 && y % 100 != 0)) {
             ngayTrongThang[2] = 29;
         }
@@ -83,7 +83,7 @@ public:
             cout << "Thoi gian (dd/mm/yyyy): ";
             getline(cin, thoiGian);
             if (Validator::laThoiGian(thoiGian)) break;
-            cout << "=> Ngay thang khong hop le. Vui long nhap lai!\n";
+            cout << "=> [Loi] Ngay thang khong hop le. Vui long nhap lai!\n";
         }
     }
 
@@ -105,7 +105,7 @@ public:
             cout << "Email: ";
             getline(cin, email);
             if (Validator::laEmail(email)) break;
-            cout << "=> Email sai dinh dang (thieu @ hoac .). Vui long nhap lai!\n";
+            cout << "=> [Loi] Email sai dinh dang (Can co @ va dau cham phan domain). Vui long nhap lai!\n";
         }
     }
 
@@ -133,7 +133,7 @@ public:
             cout << "SDT: ";
             getline(cin, sdt);
             if (Validator::laSDT(sdt)) break;
-            cout << "=> SDT khong hop le (10 so, dung dau so VN, khong duoc trung lap hoan toan). Vui long nhap lai!\n";
+            cout << "=> [Loi] SDT khong hop le (Phai la 10 chu so, dung dau so VN). Vui long nhap lai!\n";
         }
     }
 
@@ -187,6 +187,7 @@ int main() {
         cout << "Chon: ";
 
         if (!(cin >> chon)) {
+            cout << "=> [Loi] Vui long chi nhap so (0-4)!\n";
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             continue;
@@ -224,7 +225,7 @@ int main() {
                 cout << "Dang thoat...\n";
                 break;
             default:
-                cout << "Lua chon khong hop le!\n";
+                cout << "=> [Loi] Lua chon khong hop le (0-4). Vui long chon lai!\n";
         }
 
         if (tb != nullptr) {
