@@ -33,9 +33,34 @@ public:
         return true;
     }
 
-    static bool laThoiGian(string s) {
-        return (s.length() == 10 && s[2] == '/' && s[5] == '/');
+static bool laThoiGian(string s) {
+    // Kiểm tra định dạng cơ bản: độ dài và vị trí dấu '/'
+    if (s.length() != 10 || s[2] != '/' || s[5] != '/') return false;
+
+    // Kiểm tra tất cả các vị trí khác phải là số
+    for (int i = 0; i < 10; i++) {
+        if (i == 2 || i == 5) continue;
+        if (!isdigit(s[i])) return false;
     }
+
+    int d = stoi(s.substr(0, 2));
+    int m = stoi(s.substr(3, 2));
+    int y = stoi(s.substr(6, 4));
+
+    // Kiểm tra năm và tháng cơ bản
+    if (y < 1 || m < 1 || m > 12) return false;
+
+    // Số ngày tối đa trong các tháng
+    int ngayTrongThang[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+    // Kiểm tra năm nhuận để cập nhật tháng 2
+    if ((y % 400 == 0) || (y % 4 == 0 && y % 100 != 0)) {
+        ngayTrongThang[2] = 29;
+    }
+
+    // Kiểm tra ngày có nằm trong khoảng hợp lệ của tháng đó không
+    return (d >= 1 && d <= ngayTrongThang[m]);
+}
 };
 
 // ================= LỚP CƠ SỞ =================
