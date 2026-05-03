@@ -21,7 +21,7 @@ public:
         // 1. Kiểm tra độ dài và số 0 ở đầu
         if (s.length() != 10 || s[0] != '0') return false;
 
-        // 2. Kiểm tra chữ cái: Duyệt từng ký tự, nếu thấy không phải số thì loại ngay
+        // 2. Kiểm tra "Bẫy" chữ cái: Duyệt từng ký tự, nếu thấy không phải số thì loại ngay
         for (char c : s) {
             if (!isdigit(c)) return false; 
         }
@@ -105,7 +105,7 @@ public:
             cout << "Email: ";
             getline(cin, email);
             if (Validator::laEmail(email)) break;
-            cout << "=> [Loi] Email sai dinh dang (Can co @ va dau cham phan domain). Vui long nhap lai!\n";
+            cout << "=> [Loi] Email sai dinh dang. Vui long nhap lai!\n";
         }
     }
 
@@ -133,7 +133,7 @@ public:
             cout << "SDT: ";
             getline(cin, sdt);
             if (Validator::laSDT(sdt)) break;
-            cout << "=> [Loi] SDT khong hop le (Phai la 10 chu so, dung dau so VN). Vui long nhap lai!\n";
+            cout << "=> [Loi] SDT khong hop le. Vui long nhap lai!\n";
         }
     }
 
