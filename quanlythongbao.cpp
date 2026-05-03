@@ -1,69 +1,72 @@
 #include <iostream>
 #include <vector>
+#include <string>
 #include <cctype>
 #include <limits>
+
 using namespace std;
 
-// ================= VALIDATOR =================
+// ================= VALIDATOR (BỘ KIỂM TRA) =================
 class Validator {
 public:
     static bool laEmail(string s) {
-        int at = s.find('@');
-        int dot = s.find('.', at);
-        return (at > 0 && dot > at);
+        size_t at = s.find('@');
+        size_t dot = s.find('.', at);
+        return (at != string::npos && at > 0 && dot != string::npos && dot > at + 1);
     }
 
     static bool laSDT(string s) {
+        // Kiểm tra độ dài và số 0 ở đầu
         if (s.length() != 10 || s[0] != '0') return false;
 
-        // kiểm tra ký tự số
+        // Kiểm tra ký tự số
         for (char c : s)
             if (!isdigit(c)) return false;
 
-        // kiểm tra đầu số VN (3,5,7,8,9)
-        if (s[1] != '3' && s[1] != '5' && s[1] != '7' && s[1] != '8' && s[1] != '9')
+        // Kiểm tra đầu số VN (3, 5, 7, 8, 9)
+        if (string("35789").find(s[1]) == string::npos)
             return false;
 
-        // không cho toàn số giống nhau
+        // Kiểm tra nếu toàn bộ số giống hệt nhau (ví dụ: 0333333333)
         bool allSame = true;
-        for (int i = 1; i < 10; i++)
-            if (s[i] != s[0]) allSame = false;
+        for (int i = 1; i < 10; i++) {
+            if (s[i] != s[0]) {
+                allSame = false;
+                break;
+            }
+        }
         if (allSame) return false;
 
         return true;
     }
 
-static bool laThoiGian(string s) {
-    // Kiểm tra định dạng cơ bản: độ dài và vị trí dấu '/'
-    if (s.length() != 10 || s[2] != '/' || s[5] != '/') return false;
+    static bool laThoiGian(string s) {
+        // Định dạng dd/mm/yyyy
+        if (s.length() != 10 || s[2] != '/' || s[5] != '/') return false;
 
-    // Kiểm tra tất cả các vị trí khác phải là số
-    for (int i = 0; i < 10; i++) {
-        if (i == 2 || i == 5) continue;
-        if (!isdigit(s[i])) return false;
+        for (int i = 0; i < 10; i++) {
+            if (i == 2 || i == 5) continue;
+            if (!isdigit(s[i])) return false;
+        }
+
+        int d = stoi(s.substr(0, 2));
+        int m = stoi(s.substr(3, 2));
+        int y = stoi(s.substr(6, 4));
+
+        if (y < 1 || m < 1 || m > 12) return false;
+
+        int ngayTrongThang[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+        // Kiểm tra năm nhuận
+        if ((y % 400 == 0) || (y % 4 == 0 && y % 100 != 0)) {
+            ngayTrongThang[2] = 29;
+        }
+
+        return (d >= 1 && d <= ngayTrongThang[m]);
     }
-
-    int d = stoi(s.substr(0, 2));
-    int m = stoi(s.substr(3, 2));
-    int y = stoi(s.substr(6, 4));
-
-    // Kiểm tra năm và tháng cơ bản
-    if (y < 1 || m < 1 || m > 12) return false;
-
-    // Số ngày tối đa trong các tháng
-    int ngayTrongThang[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-
-    // Kiểm tra năm nhuận để cập nhật tháng 2
-    if ((y % 400 == 0) || (y % 4 == 0 && y % 100 != 0)) {
-        ngayTrongThang[2] = 29;
-    }
-
-    // Kiểm tra ngày có nằm trong khoảng hợp lệ của tháng đó không
-    return (d >= 1 && d <= ngayTrongThang[m]);
-}
 };
 
-// ================= LỚP CƠ SỞ =================
+// ================= LỚP CƠ SỞ (THÔNG BÁO) =================
 class ThongBao {
 protected:
     string tieuDe, noiDung, thoiGian;
@@ -76,10 +79,12 @@ public:
         cout << "Noi dung: ";
         getline(cin, noiDung);
 
-        do {
+        while (true) {
             cout << "Thoi gian (dd/mm/yyyy): ";
             getline(cin, thoiGian);
-        } while (!Validator::laThoiGian(thoiGian));
+            if (Validator::laThoiGian(thoiGian)) break;
+            cout << "=> Ngay thang khong hop le. Vui long nhap lai!\n";
+        }
     }
 
     virtual void xuat() = 0;
@@ -88,120 +93,150 @@ public:
     virtual ~ThongBao() {}
 };
 
-// ================= EMAIL =================
+// ================= LỚP EMAIL =================
 class ThongBaoEmail : public ThongBao {
 private:
     string email;
 
 public:
-    void nhap() {
+    void nhap() override {
         ThongBao::nhap();
-        do {
+        while (true) {
             cout << "Email: ";
             getline(cin, email);
-        } while (!Validator::laEmail(email));
+            if (Validator::laEmail(email)) break;
+            cout << "=> Email sai dinh dang (thieu @ hoac .). Vui long nhap lai!\n";
+        }
     }
 
-    void xuat() {
+    void xuat() override {
         cout << "[EMAIL] " << email
-             << " | " << tieuDe
+             << " | Tieu de: " << tieuDe
+             << " | Ngay: " << thoiGian
              << " | Phi: " << tinhChiPhi() << " VND\n";
     }
 
-    int tinhChiPhi() {
-        return noiDung.length() * 10;
+    int tinhChiPhi() override {
+        return (int)noiDung.length() * 10;
     }
 };
 
-// ================= SMS =================
+// ================= LỚP SMS =================
 class ThongBaoSMS : public ThongBao {
 private:
     string sdt;
 
 public:
-    void nhap() {
+    void nhap() override {
         ThongBao::nhap();
-        do {
+        while (true) {
             cout << "SDT: ";
             getline(cin, sdt);
-        } while (!Validator::laSDT(sdt));
+            if (Validator::laSDT(sdt)) break;
+            cout << "=> SDT khong hop le (10 so, dung dau so VN, khong duoc trung lap hoan toan). Vui long nhap lai!\n";
+        }
     }
 
-    void xuat() {
-        cout << "[SMS] " << sdt
-             << " | " << tieuDe
+    void xuat() override {
+        cout << "[SMS]   " << sdt
+             << " | Tieu de: " << tieuDe
+             << " | Ngay: " << thoiGian
              << " | Phi: " << tinhChiPhi() << " VND\n";
     }
 
-    int tinhChiPhi() {
+    int tinhChiPhi() override {
         return 500;
     }
 };
 
-// ================= PUSH =================
+// ================= LỚP PUSH =================
 class ThongBaoPush : public ThongBao {
 private:
     string deviceID;
 
 public:
-    void nhap() {
+    void nhap() override {
         ThongBao::nhap();
         cout << "Device ID: ";
         getline(cin, deviceID);
     }
 
-    void xuat() {
-        cout << "[PUSH] " << deviceID
-             << " | " << tieuDe
+    void xuat() override {
+        cout << "[PUSH]  " << deviceID
+             << " | Tieu de: " << tieuDe
+             << " | Ngay: " << thoiGian
              << " | Phi: " << tinhChiPhi() << " VND\n";
     }
 
-    int tinhChiPhi() {
+    int tinhChiPhi() override {
         return 100;
     }
 };
 
-// ================= MAIN =================
 int main() {
     vector<ThongBao*> ds;
     int chon;
 
     do {
         cout << "\n======= MENU QUAN LY THONG BAO =======\n";
-        cout << "1. Thong bao Email\n";
-        cout << "2. Thong bao SMS\n";
-        cout << "3. Thong bao Push\n";
-        cout << "4. Thong ke chi phi\n";
+        cout << "1. Them Thong bao Email\n";
+        cout << "2. Them Thong bao SMS\n";
+        cout << "3. Them Thong bao Push\n";
+        cout << "4. Xuat danh sach & Thong ke chi phi\n";
         cout << "0. Thoat\n";
         cout << "Chon: ";
 
-        cin >> chon;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // FIX getline
+        if (!(cin >> chon)) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
 
         ThongBao* tb = nullptr;
 
-        if (chon == 1) tb = new ThongBaoEmail();
-        else if (chon == 2) tb = new ThongBaoSMS();
-        else if (chon == 3) tb = new ThongBaoPush();
+        switch (chon) {
+            case 1:
+                tb = new ThongBaoEmail();
+                break;
+            case 2:
+                tb = new ThongBaoSMS();
+                break;
+            case 3:
+                tb = new ThongBaoPush();
+                break;
+            case 4: {
+                int tong = 0;
+                cout << "\n===== DANH SACH THONG BAO DA GUI =====\n";
+                if (ds.empty()) {
+                    cout << "(Trong)\n";
+                } else {
+                    for (auto x : ds) {
+                        x->xuat();
+                        tong += x->tinhChiPhi();
+                    }
+                    cout << "--------------------------------------\n";
+                    cout << "TONG CHI PHI: " << tong << " VND\n";
+                }
+                break;
+            }
+            case 0:
+                cout << "Dang thoat...\n";
+                break;
+            default:
+                cout << "Lua chon khong hop le!\n";
+        }
 
         if (tb != nullptr) {
             tb->nhap();
             ds.push_back(tb);
-        }
-
-        if (chon == 4) {
-            int tong = 0;
-            cout << "\n===== DANH SACH =====\n";
-            for (auto x : ds) {
-                x->xuat();
-                tong += x->tinhChiPhi();
-            }
-            cout << "TONG CHI PHI: " << tong << " VND\n";
+            cout << "=> Them thanh cong!\n";
         }
 
     } while (chon != 0);
 
     for (auto x : ds) delete x;
+    ds.clear();
 
     return 0;
 }
