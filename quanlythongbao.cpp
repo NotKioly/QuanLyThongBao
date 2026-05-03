@@ -21,7 +21,7 @@ public:
         // 1. Kiểm tra độ dài và số 0 ở đầu
         if (s.length() != 10 || s[0] != '0') return false;
 
-        // 2. Kiểm tra "Bẫy" chữ cái: Duyệt từng ký tự, nếu thấy không phải số thì loại ngay
+        // 2. Kiểm tra chữ cái: Duyệt từng ký tự, nếu thấy không phải số thì loại ngay
         for (char c : s) {
             if (!isdigit(c)) return false; 
         }
